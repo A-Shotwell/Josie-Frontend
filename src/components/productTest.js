@@ -39,7 +39,7 @@ const ProductTestForm = (props) => {
     for (let i of files){
       const getFileBuffer = async (file) => {
        const fileArrayBuffer = await i.arrayBuffer() 
-       const fileBuffer = Buffer.from(fileArrayBuffer)
+       const fileBuffer = Buffer.from(fileArrayBuffer).toString('base64')
        return fileBuffer
       }
       const submitFileBuffer = await getFileBuffer()
