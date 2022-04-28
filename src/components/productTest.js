@@ -33,7 +33,7 @@ const ProductTestForm = (props) => {
   };
 
   const handleImageSelection = async (e) => {
-    let newVariant = {...variant}
+    let newVariant = { ...variant }
     const files = e.target.files
     console.log(files)
     for (let i of files){
@@ -49,9 +49,9 @@ const ProductTestForm = (props) => {
     console.log(`NEW VARIANT: ${JSON.stringify(newVariant, null, 20)}`)
   }
 
-  const handleProductSubmit = (event) => {
+  const handleProductSubmit = async (event) => {
     event.preventDefault();
-    axios.post("http://localhost:5000/product", product);
+    await axios.post("http://localhost:5000/product", product);
     alert(JSON.stringify(product, null, 20));
   };
 
