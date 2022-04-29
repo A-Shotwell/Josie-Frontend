@@ -51,7 +51,7 @@ const ProductTestForm = (props) => {
 
   const handleProductSubmit = async (event) => {
     event.preventDefault();
-    await axios.post("http://localhost:5000/product", product);
+    await axios.post("http://localhost:5000/product", product, { withCredentials: true });
     alert(JSON.stringify(product, null, 20));
   };
 
