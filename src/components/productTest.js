@@ -17,14 +17,15 @@ const ProductTestForm = (props) => {
     name: null,
     description: null,
     variants: [],
-  });
+  })
   const [variant, setVariant] = useState({
     name: null,
     description: null,
     price: null,
     inStock: null,
     images: [],
-  });
+  })
+  const [ imageChunks, setImageChunks ] = useState([])
 
   const handleVariantSubmit = (event) => {
     let newProduct = { ...product }
@@ -32,33 +33,81 @@ const ProductTestForm = (props) => {
     setProduct(newProduct)
   };
 
-  const handleImageSelection = async (e) => {
-    let newVariant = { ...variant }
-    const files = e.target.files
-    console.log(files)
-    for (let i of files){
-      const getFileBuffer = async (file) => {
-       const fileArrayBuffer = await i.arrayBuffer() 
-       const fileBuffer = Buffer.from(fileArrayBuffer).toString('base64')
-       return fileBuffer
-      }
-      const submitFileBuffer = await getFileBuffer()
-      await newVariant.images.push(submitFileBuffer)
-      console.log(newVariant.images[newVariant.images.length - 1].toString())
+  // const handleImageSelection = async (e) => {
+  //   let newVariant = { ...variant }
+  //   const files = e.target.files
+  //   // console.log(files)
+  //   for (let i of files){
+  //     const getFileBuffer = async (file) => {
+  //      const fileArrayBuffer = await i.arrayBuffer() 
+  //      const fileBuffer = Buffer.from(fileArrayBuffer).toString('base64')
+  //      return fileBuffer
+  //     }
+  //     const submitFileBuffer = await getFileBuffer()
+  //     await newVariant.images.push(submitFileBuffer)
+  //     // console.log(newVariant.images[newVariant.images.length - 1].toString())
+  //   }
+  //   console.log(`NEW VARIANT: ${JSON.stringify(newVariant, null, 20)}`)
+  // }
+
+  // return array of file chunk objects, including filename, part, and chunk of base64 string
+  const getChunks = (filename, baseStr, chunkSize) => {
+    let str = baseStr.split("")
+    const chunks = []
+    let part = 0
+    let count = str.length
+    let start = 0
+    while (count){
+        part++
+        start = str.length - count
+        let allowedCount = count < chunkSize ? count : chunkSize
+        chunks.push({
+            series: filename,
+            part: part,
+            data: str.slice(start, start + allowedCount).join("")
+        })
+        count -= allowedCount
     }
-    console.log(`NEW VARIANT: ${JSON.stringify(newVariant, null, 20)}`)
+    return chunks 
+  }
+
+  const handleImageSelection = async (event) => {
+    // get array of filenames, set variant [images] to filenames array
+    const files = event.target.files
+    if (files){
+      const fileNames = []
+      for (let i in files)
+        fileNames.push(files[i].name)
+      let newVariant = { ...variant }
+      newVariant.images = fileNames
+      setVariant({ ...newVariant })
+    }
+
+    // for each file, get file buffer, get buffer base64 string, push getChunks(string)
+    const chunks = []
+    for (let i in files){
+      const fileArrayBuffer = await files[i].arrayBuffer() // ERROR: .arrayBuffer() is not a function
+      const fileBuffer = await Buffer.from(fileArrayBuffer).toString('base64')
+      chunks.push(getChunks(files[i].name, fileBuffer, 10000))
+    }
+    const newImageChunks = imageChunks
+    imageChunks.push(chunks)
+    setImageChunks(newImageChunks)
   }
 
   const handleProductSubmit = async (event) => {
     event.preventDefault();
-    await axios.post("http://localhost:5000/product", product, { withCredentials: true });
-    alert(JSON.stringify(product, null, 20));
+    await axios.post("http://localhost:5000/product", product);
+    // alert(JSON.stringify(product, null, 20));
+    for (let i in imageChunks){
+      console.log(imageChunks[i])
+      await axios.post("http://localhost:5000/imagechunks", imageChunks[i])
+    }
   };
 
   // TESTING ONLY
-  const checkFilesArray = () => {
-    for (let i of variant.images)
-      console.log(i.toString())
+  const checkProductObject = () => {
+    console.log(JSON.stringify(product, null, 20))
   }
 
   return (
@@ -131,14 +180,14 @@ const ProductTestForm = (props) => {
                 width: "60.25%"
             }}
             onChange={(e) =>
-              setVariant({ ...variant, description: e.target.value })
+              setProduct({ ...product, description: e.target.value })
             }
           />
           <br />
           <button type="submit">Add product</button>
         </form>
       </div>
-      <button onClick={checkFilesArray}>Check Files Array</button>
+      <button onClick={checkProductObject}>Check Product Object</button>
     </div>
   );
 };
