@@ -2,6 +2,11 @@ import { useState } from 'react';
 // import axios from "axios";
 // import { Buffer } from 'buffer';
 
+/********************************************************************************************************************************
+ PROBLEMS: NO CURRENT PROBLEMS
+ 
+********************************************************************************************************************************/
+
 const VariantTestForm = (props) => {
     const [ productType, setProductType ] = useState("Existing Product")
     const [ formValues, setFormValues ] = useState({
@@ -13,20 +18,57 @@ const VariantTestForm = (props) => {
         price: null,
         inStock: null
     })
-    // const [ validCheck, setValidCheck ] = useState(true)
 
-    // CREATE FORM VALIDATION (Anonymous function array, return null on validation, <p> on rejection)
+    // Validation switch, activate at submit
+    const [ validCheck, setValidCheck ] = useState(false)
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        alert(JSON.stringify(formValues, null, 7))
-        window.location.reload(true)
+    // Check for and reject null/unselected values. Ignore "isNewProduct" boolean. Ignore product description if product is not new.
+    // Return true if all values pass validation
+    const handleValidCheck = () => {
+        for (let i in formValues){
+            if (i === "productDesc" && !formValues.isNewProduct)
+                continue;
+
+            if(i === "isNewProduct")
+                continue
+
+            if (!formValues[i] || formValues[i] === "Select Product" )
+                return false
+        }
+        return true
     }
 
-    // MAKE PRODUCT NAME FETCHING FUNCTION
+    // Run validation check and notifications. If validation passes, alert with captured values and refresh window.
+    // FUTURE: in place of alert, submit values to database
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        console.log('Attempting to submit...')
+        setValidCheck(true)
+        if (handleValidCheck()){
+            alert(JSON.stringify(formValues, null, 7))
+            window.location.reload(true)
+        }
+    }
+
+    // Check for null/unselected values in form, render notification on null value found
+    const validation = (value, checkValue, jsxString) => {
+        if (!value || value === "Select Product"){
+            value = false
+            checkValue = false
+        }
+        if (validCheck){
+            if (value === checkValue)
+                return jsxString
+            return null
+        }
+    }
+
+    // Return product selection dropdown menu if existing product, name and description fields if new
+    // Future: Make function to retrieve existing product names from database. Replace placeholder values in dropdown for names array.
     const getProduct = (isNew) => {
+        // TO DO: FETCH PRODUCT NAMES
+
         if (productType === "Existing Product"){
-            console.log(formValues)
             return (
                 <div>
                     <select 
@@ -40,7 +82,7 @@ const VariantTestForm = (props) => {
                         <option value="2">2</option>
                         <option value="3">3</option>
                     </select>
-                    {/* { validCheck && <span>Please select a product</span> } */}
+                    { validation(formValues.product, "Select Product", <span>Please select product</span>) }
                 </div>
             )
         }
@@ -51,11 +93,15 @@ const VariantTestForm = (props) => {
                         type="text" 
                         placeholder="New Product Name" 
                         onChange={e => setFormValues({...formValues, product: e.target.value})} 
-                    /><br />
+                    />
+                    { validation(formValues.product, "Select Product" || null, <span>Please enter product name</span>) }
+                    <br />
                     <textarea 
                         placeholder="New Product Description" 
                         onChange={e => setFormValues({...formValues, productDesc: e.target.value})} 
-                    /><br />
+                    />
+                    { validation(formValues.productDesc, false, <span>Please enter product description</span>) }
+                    <br />
                 </div>
             )
         }
@@ -63,7 +109,10 @@ const VariantTestForm = (props) => {
 
     return (
         <div>
-            <form onSubmit={e => handleSubmit(e)}>
+            <form onSubmit={e => {
+                handleValidCheck()
+                handleSubmit(e)
+            }}>
                 <div>
                     <input 
                         type="radio" 
@@ -93,21 +142,29 @@ const VariantTestForm = (props) => {
                     type="text"
                     placeholder="Variant Name"
                     onChange={e => setFormValues({...formValues, variant: e.target.value})}
-                /><br />
+                />
+                { validation(formValues.variant, null, <span>Please enter variant name</span>) }
+                <br />
                 <textarea
                     placeholder="Variant Description"
                     onChange={e => setFormValues({...formValues, variantDesc: e.target.value})}
-                /><br />
+                />
+                { validation(formValues.variantDesc, null, <span>Please enter variant description</span>) }
+                <br />
                 <input 
                     type="text"
                     placeholder="Variant Price"
                     onChange={e => setFormValues({...formValues, price: e.target.value * 100})}
-                /><br />
+                />
+                { validation(formValues.price, null, <span>Please enter variant price</span>) }
+                <br />
                 <input 
                     type="text"
                     placeholder="Number in Stock"
                     onChange={e => setFormValues({...formValues, inStock: e.target.value})}
-                /><br />
+                />
+                { validation(formValues.inStock, null, <span>Please enter number in stock</span>) }
+                <br />
                 <button type="submit">Submit</button>
             </form>
         </div>
