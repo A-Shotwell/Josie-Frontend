@@ -4,13 +4,9 @@ import { Buffer } from 'buffer';
 
 /********************************************************************************************************************************
  PROBLEMS:
-    A) handleImageChange() FUNCTION: imageChunks state variable is not updating correctly. Selecting an image returns an empty array.
-       Selecting another image returns an array of the last image's base64 chunks. It seems that the imageChunks variable isn't being
-       set until the next refresh. What is causing this?
+    - formValues.imageFiles maintains only one filename of the multiple files selected
 
  NEXT STEPS:
-    - Get images from form, break into chunks
-    - Reconfigure database model to account for new product structure
     - Test product submission
     - Create function to fetch product names
  
@@ -33,8 +29,13 @@ const VariantTestForm = (props) => {
     const [ validCheck, setValidCheck ] = useState(false)
 
     // store chunked file base64 strings for individual submission
-    // store to objects with product name, variant name, series name (filename), chunk part in series, and data chunk
+    // store to objects with series name (filename), chunk part in series, and data chunk
     const [ imageChunks, setImageChunks ] = useState([])
+
+    // ONLY FOR TESTING PURPOSES
+    const checkImages = () => {
+        console.log(imageChunks)
+    }
 
     // Check for and reject null/unselected values. Ignore "isNewProduct" boolean. Ignore product description if product is not new.
     // Return true if all values pass validation
@@ -79,15 +80,7 @@ const VariantTestForm = (props) => {
 
     // Get image chunks per image, update product object with file names
     // Chunks to be handled in submission as objects: product, variant, series, part (per array index), data
-    const handleImageChange = async (e) => {
-        /* TO DO: 
-            - bring in chunks function
-            - for each image: establish object -- product, variant, series (file name), chunks
-            - submit series (filename) to product files array
-            - get chunks with chunks function
-            - submit object to imageChunks array
-        */
-
+    const handleImageChange = async (e) => { 
         const files = e.target.files
 
         // Break image base64 string into chunks for database upload, store each in object with series (filename) and part
@@ -108,29 +101,29 @@ const VariantTestForm = (props) => {
                 })
                 count -= allowedCount
             }
+            
             return chunks 
         }
 
         // empty imageChunks array to prepare for new file selection
         const fileChunks = []
+        setFormValues({...formValues, imageFiles: []})
 
+        const fileNames =  []
         for (let i = 0; i < files.length; i++){
             // Push file name to product object imageFiles array  
-            const fileNames =  formValues.imageFiles
             fileNames.push(files[i].name)
             setFormValues({...formValues, imageFiles: fileNames})
 
             // get array of file chunk objects, push to imageChunks array
             const file = await new Response(files[i]).arrayBuffer()
-            const baseString = await Buffer.from(file).toString('base64')
+            const baseString = Buffer.from(file).toString('base64')
             const chunks = getChunks(files[i].name, baseString, 10000)
 
             fileChunks.push(chunks)
         }
 
-        // PROBLEM: imageChunks state variable is not updating correctly. See problem (A) above.
         setImageChunks([...fileChunks])
-        console.log(imageChunks)
     }
 
     // Return product selection dropdown menu if existing product, name and description fields if new
@@ -226,6 +219,7 @@ const VariantTestForm = (props) => {
                     type="file"
                     name="images"
                     accept="image/jpeg, image/png, image/gif"
+                    multiple
                     onChange={e => handleImageChange(e)}
                 /><br />
                 <input 
@@ -244,6 +238,9 @@ const VariantTestForm = (props) => {
                 <br />
                 <button type="submit">Submit</button>
             </form>
+            <br />
+            <br />
+            <button onClick={checkImages}>Check Images</button>
         </div>
     )
 }
