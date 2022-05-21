@@ -4,7 +4,7 @@ import { Buffer } from 'buffer';
 
 /********************************************************************************************************************************
  PROBLEMS:
-    - formValues.imageFiles maintains only one filename of the multiple files selected
+    - No Current problems
 
  NEXT STEPS:
     - Test product submission
@@ -15,7 +15,6 @@ import { Buffer } from 'buffer';
 const VariantTestForm = (props) => {
     const [ productType, setProductType ] = useState("Existing Product")
     const [ formValues, setFormValues ] = useState({
-        isNewProduct: false,
         product: "Select Product",
         productDesc: null,
         variant: null,
@@ -37,15 +36,12 @@ const VariantTestForm = (props) => {
         console.log(imageChunks)
     }
 
-    // Check for and reject null/unselected values. Ignore "isNewProduct" boolean. Ignore product description if product is not new.
+    // Check for and reject null/unselected values. Ignore product description if product is not new.
     // Return true if all values pass validation
     const handleValidCheck = () => {
         for (let i in formValues){
-            if (i === "productDesc" && !formValues.isNewProduct)
+            if (i === "productDesc" && productType === "Existing Product")
                 continue;
-
-            if(i === "isNewProduct")
-                continue
 
             if (!formValues[i] || formValues[i] === "Select Product" )
                 return false
@@ -128,7 +124,7 @@ const VariantTestForm = (props) => {
 
     // Return product selection dropdown menu if existing product, name and description fields if new
     // Future: Make function to retrieve existing product names from database. Replace placeholder values in dropdown for names array.
-    const getProduct = (isNew) => {
+    const getProduct = () => {
         // TO DO: FETCH PRODUCT NAMES
 
         if (productType === "Existing Product"){
@@ -184,7 +180,6 @@ const VariantTestForm = (props) => {
                         checked={productType === "Existing Product" ? true : false}
                         onChange={e => {
                             setProductType(e.target.value)
-                            setFormValues({...formValues, isNewProduct: false})
                         }}
                     />
                     <label htmlFor="Existing Product">Existing Product</label><br />                 
@@ -195,7 +190,7 @@ const VariantTestForm = (props) => {
                         checked={productType === "New Product" ? true : false}
                         onChange={e => {
                             setProductType(e.target.value)
-                            setFormValues({...formValues, productDesc: null, isNewProduct: true})
+                            setFormValues({...formValues, productDesc: null})
                         }}
                     />
                     <label htmlFor="New Product">New Product</label>
